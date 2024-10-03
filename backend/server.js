@@ -8,7 +8,8 @@ import connectMongoDB from "./db/connectMongoDB.js";
 dotenv.config();
 const PORT = process.env.PORT || 8000;
 const app = express();
-
+app.use(express.json()); // tp parse req.body
+app.use(express.urlencoded({ extended: true })) // to parse form data encoded
 // Use the auth routes at the path "/api/auth"
 app.use("/api/auth", authRoutes);
 
