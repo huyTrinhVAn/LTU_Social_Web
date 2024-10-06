@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    follower: [
+    followers: [
         {
             //id create by mongoDb
             type: mongoose.Schema.Types.ObjectId,

@@ -1,5 +1,6 @@
 import express from "express";
 import authRoutes from "./routes/auth.routes.js";  // Correct path
+import userRoutes from "./routes/user.routes.js";
 import dotenv from "dotenv";
 import connectMongoDB from "./db/connectMongoDB.js";
 import cookieParser from "cookie-parser";
@@ -14,6 +15,7 @@ app.use(express.urlencoded({ extended: true })); // to parse form data encoded
 app.use(cookieParser());
 // Use the auth routes at the path "/api/auth"
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 // Start the server on port 
 app.listen(PORT, () => {
