@@ -3,7 +3,7 @@ import express from "express";
 
 import authRoutes from "./routes/auth.routes.js";  // Correct path
 import userRoutes from "./routes/user.routes.js";
-
+import postRoutes from "./routes/post.routes.js"
 
 import dotenv from "dotenv";
 import connectMongoDB from "./db/connectMongoDB.js";
@@ -26,7 +26,7 @@ app.use(cookieParser());
 // Use the auth routes at the path "/api/auth"
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-
+app.use("/api/posts", postRoutes);
 // Start the server on port 
 app.listen(PORT, () => {
     console.log(`Sever is running on ${PORT}`);
