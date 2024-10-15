@@ -99,6 +99,7 @@ And this is a list of funcions in this app: <br/>
 -   🖼️ Edit Cover Image and Profile Image
 -   📷 Image Uploads using Cloudinary
 -   🔔 Send Notifications
+<br/>
 You can check all these functions in the ```controllers``` folder<br/>
 </details>
 <details>
