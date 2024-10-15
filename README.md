@@ -813,6 +813,7 @@ http://localhost:5000/api/notifications
 </details>
 
 <details>
+
 <summary>4. UI </summary>
 
 1. Log in Page
@@ -823,8 +824,6 @@ http://localhost:5000/api/notifications
 ![alt text](./frontend/public/img/HomePage.png)
 4. Profile Page
 ![alt text](./frontend/public/img/ProfilePage.png)
-5. Notification page
-![alt text](./frontend/public/img/)
 6. Notification page
 ![alt text](./frontend/public/img/NotificationPage.png)
 </details>
