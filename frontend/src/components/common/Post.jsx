@@ -104,8 +104,6 @@ const Post = ({ post }) => {
             toast.error(error.message);
         },
     });
-
-
     const handleDeletePost = () => {
         deletePost();
     };

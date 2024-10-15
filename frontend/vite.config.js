@@ -8,7 +8,7 @@ export default defineConfig({
     port: 3002,
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "http://api:5000", // Thay 'api' bằng tên dịch vụ backend trong docker-compose
         changeOrigin: true,
       },
     },

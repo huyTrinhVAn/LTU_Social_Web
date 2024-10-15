@@ -39,8 +39,7 @@ const SignUpPage = () => {
                 console.log(data);
                 return data;
             } catch (error) {
-                console.error(error);
-                throw error;
+                throw new Error(error);
             }
         },
         onSuccess: () => {
