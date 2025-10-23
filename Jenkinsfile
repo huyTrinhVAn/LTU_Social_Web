@@ -57,23 +57,49 @@ pipeline {
         
 stage('Deploy to EC2') {
     steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+        withCredentials([
+            sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+            usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
+        ]) {
             sh """
-                # Copy SSH key và set permissions
+                # Setup SSH key
                 mkdir -p ~/.ssh
                 cp \$SSH_KEY ~/.ssh/deploy_key
                 chmod 600 ~/.ssh/deploy_key
                 
-                # SSH vào EC2 và deploy
-                ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${EC2_HOST} '
-                    cd /home/ec2-user/app &&
-                    docker compose pull &&
-                    docker compose down &&
+                # Deploy to EC2
+                ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${EC2_HOST} << 'ENDSSH'
+                    set -e
+                    
+                    # Login to Docker Hub
+                    echo "Logging into Docker Hub..."
+                    echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+                    
+                    # Navigate to app directory
+                    cd /home/ec2-user/app
+                    
+                    # Pull latest images from Docker Hub
+                    echo "Pulling latest images from Docker Hub..."
+                    docker compose pull
+                    
+                    # Stop old containers
+                    echo "Stopping old containers..."
+                    docker compose down
+                    
+                    # Start new containers
+                    echo "Starting new containers..."
                     docker compose up -d
-                '
+                    
+                    # Show running containers
+                    echo "Deployment completed! Running containers:"
+                    docker compose ps
+                    
+                    # Logout from Docker Hub
+                    docker logout
+ENDSSH
                 
                 # Cleanup
-                rm ~/.ssh/deploy_key
+                rm -f ~/.ssh/deploy_key
             """
         }
     }
