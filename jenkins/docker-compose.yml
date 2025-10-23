@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  dind:
+    image: docker:27-dind
+    container_name: jenkins-docker
+    privileged: true
+    restart: unless-stopped
+    networks:
+      jenkins:
+        aliases:
+          - docker
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+      - DOCKER_DRIVER=overlay2
+    volumes:
+      - jenkins-docker-certs:/certs/client
+      - jenkins-data:/var/jenkins_home
+    ports:
+      - "2376:2376"
+
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jenkins-blueocean
+    restart: unless-stopped
+    networks:
+      - jenkins
+    environment:
+      - DOCKER_HOST=tcp://docker:2376
+      - DOCKER_CERT_PATH=/certs/client
+      - DOCKER_TLS_VERIFY=1
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - jenkins-docker-certs:/certs/client:ro
+      - ..:/workspace          # Mount toàn bộ source code ra Jenkins
+    depends_on:
+      - dind
+
+networks:
+  jenkins:
+    driver: bridge
+
+volumes:
+  jenkins-docker-certs:
+  jenkins-data:
