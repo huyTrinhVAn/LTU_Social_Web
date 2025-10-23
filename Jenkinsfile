@@ -26,9 +26,7 @@ pipeline {
         
         stage('Build Images') {
             steps {
-                dir('/workspace') {  // Vì mount project root trong docker-compose
                     sh "docker-compose build"
-                }
             }
         }
         
