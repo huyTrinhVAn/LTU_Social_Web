@@ -55,20 +55,29 @@ pipeline {
             }
         }
         
-        stage('Deploy to EC2') {
-            steps {
-                sshagent(['ec2-ssh-key']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_HOST} '
-                            cd /home/ec2-user/app &&
-                            docker compose pull &&
-                            docker compose down &&
-                            docker compose up -d
-                        '
-                    """
-                }
-            }
+stage('Deploy to EC2') {
+    steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+            sh """
+                # Copy SSH key và set permissions
+                mkdir -p ~/.ssh
+                cp \$SSH_KEY ~/.ssh/deploy_key
+                chmod 600 ~/.ssh/deploy_key
+                
+                # SSH vào EC2 và deploy
+                ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${EC2_HOST} '
+                    cd /home/ec2-user/app &&
+                    docker compose pull &&
+                    docker compose down &&
+                    docker compose up -d
+                '
+                
+                # Cleanup
+                rm ~/.ssh/deploy_key
+            """
         }
+    }
+}
     }
     
     post {
