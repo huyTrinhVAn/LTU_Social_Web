@@ -1,14 +1,17 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3002,
+    host: '0.0.0.0',  // Thêm dòng này
+    port: 3000,
+    watch: {
+      usePolling: true  // Thêm dòng này - quan trọng cho Docker
+    },
     proxy: {
       "/api": {
-        target: "http://api:5000", // Thay 'api' bằng tên dịch vụ backend trong docker-compose
+        target: "http://api:5000",
         changeOrigin: true,
       },
     },
