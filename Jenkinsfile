@@ -58,48 +58,22 @@ pipeline {
 stage('Deploy to EC2') {
     steps {
         withCredentials([
-            sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+            sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY'),
             usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
         ]) {
             sh """
-                # Setup SSH key
-                mkdir -p ~/.ssh
-                cp \$SSH_KEY ~/.ssh/deploy_key
-                chmod 600 ~/.ssh/deploy_key
-                
-                # Deploy to EC2
-                ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${EC2_HOST} << 'ENDSSH'
-                    set -e
-                    
-                    # Login to Docker Hub
-                    echo "Logging into Docker Hub..."
-                    echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-                    
-                    # Navigate to app directory
-                    cd /home/ec2-user/app
-                    
-                    # Pull latest images from Docker Hub
-                    echo "Pulling latest images from Docker Hub..."
-                    docker compose pull
-                    
-                    # Stop old containers
-                    echo "Stopping old containers..."
-                    docker compose down
-                    
-                    # Start new containers
-                    echo "Starting new containers..."
-                    docker compose up -d
-                    
-                    # Show running containers
-                    echo "Deployment completed! Running containers:"
-                    docker compose ps
-                    
-                    # Logout from Docker Hub
-                    docker logout
-ENDSSH
-                
-                # Cleanup
-                rm -f ~/.ssh/deploy_key
+                ssh -o StrictHostKeyChecking=no -i \$SSH_KEY ec2-user@3.27.241.75 '
+                    sudo docker login -u \$DOCKER_USER -p \$DOCKER_PASS &&
+
+                    sudo docker ps -aq | xargs -r sudo docker stop && 
+                    sudo docker ps -aq | xargs -r sudo docker rm ||
+
+                    sudo docker pull huyvantrinh3008/ltu-backend:latest &&
+                    sudo docker pull huyvantrinh3008/ltu-frontend:latest &&
+
+                    sudo docker run -d --name backend -p 5000:5000 huyvantrinh3008/ltu-backend:latest &&
+                    sudo docker run -d --name frontend -p 3000:3000 huyvantrinh3008/ltu-frontend:latest
+                '
             """
         }
     }
