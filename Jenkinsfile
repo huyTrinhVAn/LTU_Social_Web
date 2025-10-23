@@ -18,15 +18,16 @@ pipeline {
         stage('Verify Docker DinD') {
             steps {
                 sh '''
-                docker --version
-                docker info
+                    docker --version
+                    docker compose version
+                    docker info
                 '''
             }
         }
         
         stage('Build Images') {
             steps {
-                    sh "docker-compose build"
+                sh 'docker compose build'
             }
         }
         
@@ -39,11 +40,13 @@ pipeline {
         stage('Tag and Push Images') {
             steps {
                 sh """
+                    # Tag và push backend
                     docker tag huyvantrinh3008/ltu-backend:latest ${BACKEND_IMAGE}:latest
                     docker tag huyvantrinh3008/ltu-backend:latest ${BACKEND_IMAGE}:${BUILD_NUMBER}
                     docker push ${BACKEND_IMAGE}:latest
                     docker push ${BACKEND_IMAGE}:${BUILD_NUMBER}
 
+                    # Tag và push frontend
                     docker tag huyvantrinh3008/ltu-frontend:latest ${FRONTEND_IMAGE}:latest
                     docker tag huyvantrinh3008/ltu-frontend:latest ${FRONTEND_IMAGE}:${BUILD_NUMBER}
                     docker push ${FRONTEND_IMAGE}:latest
@@ -56,12 +59,12 @@ pipeline {
             steps {
                 sshagent(['ec2-ssh-key']) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no ${EC2_HOST} "
-                    cd /home/ec2-user/app &&
-                    docker-compose pull &&
-                    docker-compose down &&
-                    docker-compose up -d
-                    "
+                        ssh -o StrictHostKeyChecking=no ${EC2_HOST} '
+                            cd /home/ec2-user/app &&
+                            docker compose pull &&
+                            docker compose down &&
+                            docker compose up -d
+                        '
                     """
                 }
             }
@@ -71,6 +74,12 @@ pipeline {
     post {
         always {
             sh 'docker logout'
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
