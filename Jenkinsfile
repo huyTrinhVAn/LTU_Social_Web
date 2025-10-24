@@ -61,40 +61,41 @@ stage('Deploy to EC2') {
             sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY'),
             usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
         ]) {
-            sh """
+            sh '''
                 # Copy docker-compose.prod.yml lên EC2
-                scp -o StrictHostKeyChecking=no -i \$SSH_KEY docker-compose.prod.yml ${EC2_HOST}:/home/ec2-user/app/docker-compose.yml
+                scp -o StrictHostKeyChecking=no -i $SSH_KEY docker-compose.prod.yml ''' + EC2_HOST + ''':/home/ec2-user/app/docker-compose.yml
                 
                 # SSH và deploy
-                ssh -o StrictHostKeyChecking=no -i \$SSH_KEY ${EC2_HOST} '
+                ssh -o StrictHostKeyChecking=no -i $SSH_KEY ''' + EC2_HOST + ''' "
                     cd /home/ec2-user/app
                     
                     # Login DockerHub
-                    echo ${DOCKER_PASS} | sudo docker login -u ${DOCKER_USER} --password-stdin
-                    
-                    # Stop và force remove tất cả containers (quan trọng!)
-                    sudo docker compose down --remove-orphans || true
-                    
-                    # Hoặc xóa containers theo tên cụ thể
-                    sudo docker rm -f backend frontend || true
+                    echo $DOCKER_PASS | sudo docker login -u $DOCKER_USER --password-stdin
                     
                     # Pull images mới
                     sudo docker compose pull
                     
-                    # Start containers mới
+                    # Stop và remove containers cũ (bao gồm orphans)
+                    sudo docker compose down --remove-orphans
+                    
+                    # Force remove containers nếu vẫn tồn tại
+                    sudo docker rm -f backend frontend 2>/dev/null || true
+                    
+                    # Start containers mới với images mới
                     sudo docker compose up -d
                     
                     # Logout
                     sudo docker logout
                     
-                    # Xem status
-                    sudo docker compose ps
-                    sudo docker compose logs --tail=30
-                '
-            """
+                    # Xem logs để kiểm tra
+                    sudo docker compose logs --tail=50
+                "
+            '''
         }
     }
 }
+
+    }
     
     post {
         always {
