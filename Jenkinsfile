@@ -55,39 +55,43 @@ pipeline {
             }
         }
         
-stage('Deploy to EC2') {
-    steps {
-        withCredentials([
-            sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY'),
-            usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
-        ]) {
-            sh """
-                ssh -o StrictHostKeyChecking=no -i \$SSH_KEY ${EC2_HOST} '
-                    sudo docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} &&
-                    
-                    # Stop và xóa containers cũ
-                    sudo docker ps -aq | xargs -r sudo docker stop
-                    sudo docker ps -aq | xargs -r sudo docker rm
-                    
-                    # Pull images mới
-                    sudo docker pull ${BACKEND_IMAGE}:latest
-                    sudo docker pull ${FRONTEND_IMAGE}:latest
-                    
-                    # Chạy backend với file .env được mount
-                    sudo docker run -d --name backend \
-                        -p 5000:5000 \
-                        --env-file /home/ec2-user/app/.env \
-                        ${BACKEND_IMAGE}:latest
-                    
-                    # Chạy frontend
-                    sudo docker run -d --name frontend \
-                        -p 3000:3000 \
-                        ${FRONTEND_IMAGE}:latest
-                '
-            """
+        stage('Deploy to EC2') {
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY'),
+                    usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
+                ]) {
+                    sh """
+                        # Copy docker-compose.yml lên EC2
+                        scp -o StrictHostKeyChecking=no -i \$SSH_KEY docker-compose.yml ${EC2_HOST}:/home/ec2-user/app/
+                        
+                        # Copy file .env nếu có (hoặc tạo trên EC2 trước)
+                        # scp -o StrictHostKeyChecking=no -i \$SSH_KEY backend/.env ${EC2_HOST}:/home/ec2-user/app/
+                        
+                        # SSH vào EC2 và deploy
+                        ssh -o StrictHostKeyChecking=no -i \$SSH_KEY ${EC2_HOST} '
+                            cd /home/ec2-user/app
+                            
+                            # Login Docker Hub
+                            sudo docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+                            
+                            # Pull images mới
+                            sudo docker compose pull
+                            
+                            # Stop và remove containers cũ
+                            sudo docker compose down
+                            
+                            # Start containers mới
+                            sudo docker compose up -d
+                            
+                            # Logout
+                            sudo docker logout
+                        '
+                    """
+                }
+            }
         }
     }
-}
     }
     
     post {
