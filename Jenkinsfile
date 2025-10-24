@@ -62,18 +62,15 @@ stage('Deploy to EC2') {
                     usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
                 ]) {
                     sh """
-                        # Copy docker-compose.yml lên EC2
-                        scp -o StrictHostKeyChecking=no -i \$SSH_KEY docker-compose.yml ${EC2_HOST}:/home/ec2-user/app/
+                        # Copy docker-compose.prod.yml lên EC2
+                        scp -o StrictHostKeyChecking=no -i \$SSH_KEY docker-compose.prod.yml ${EC2_HOST}:/home/ec2-user/app/docker-compose.yml
                         
-                        # Copy file .env nếu có (hoặc tạo trên EC2 trước)
-                        # scp -o StrictHostKeyChecking=no -i \$SSH_KEY backend/.env ${EC2_HOST}:/home/ec2-user/app/
-                        
-                        # SSH vào EC2 và deploy
+                        # SSH và deploy
                         ssh -o StrictHostKeyChecking=no -i \$SSH_KEY ${EC2_HOST} '
                             cd /home/ec2-user/app
                             
-                            # Login Docker Hub
-                            sudo docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+                            # Login DockerHub
+                            echo ${DOCKER_PASS} | sudo docker login -u ${DOCKER_USER} --password-stdin
                             
                             # Pull images mới
                             sudo docker compose pull
@@ -81,11 +78,14 @@ stage('Deploy to EC2') {
                             # Stop và remove containers cũ
                             sudo docker compose down
                             
-                            # Start containers mới
+                            # Start containers mới với images mới
                             sudo docker compose up -d
                             
                             # Logout
                             sudo docker logout
+                            
+                            # Xem logs để kiểm tra
+                            sudo docker compose logs --tail=50
                         '
                     """
                 }
