@@ -62,17 +62,27 @@ stage('Deploy to EC2') {
             usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
         ]) {
             sh """
-                ssh -o StrictHostKeyChecking=no -i \$SSH_KEY ec2-user@3.27.241.75 '
-                    sudo docker login -u \$DOCKER_USER -p \$DOCKER_PASS &&
-
-                    sudo docker ps -aq | xargs -r sudo docker stop && 
-                    sudo docker ps -aq | xargs -r sudo docker rm ||
-
-                    sudo docker pull huyvantrinh3008/ltu-backend:latest &&
-                    sudo docker pull huyvantrinh3008/ltu-frontend:latest &&
-
-                    sudo docker run -d --name backend -p 5000:5000 huyvantrinh3008/ltu-backend:latest &&
-                    sudo docker run -d --name frontend -p 3000:3000 huyvantrinh3008/ltu-frontend:latest
+                ssh -o StrictHostKeyChecking=no -i \$SSH_KEY ${EC2_HOST} '
+                    sudo docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} &&
+                    
+                    # Stop và xóa containers cũ
+                    sudo docker ps -aq | xargs -r sudo docker stop
+                    sudo docker ps -aq | xargs -r sudo docker rm
+                    
+                    # Pull images mới
+                    sudo docker pull ${BACKEND_IMAGE}:latest
+                    sudo docker pull ${FRONTEND_IMAGE}:latest
+                    
+                    # Chạy backend với file .env được mount
+                    sudo docker run -d --name backend \
+                        -p 5000:5000 \
+                        --env-file /home/ec2-user/app/.env \
+                        ${BACKEND_IMAGE}:latest
+                    
+                    # Chạy frontend
+                    sudo docker run -d --name frontend \
+                        -p 3000:3000 \
+                        ${FRONTEND_IMAGE}:latest
                 '
             """
         }
