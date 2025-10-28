@@ -8,7 +8,7 @@ To run this application , you have to create an ```.env``` file  in ```backend``
 
 ```js
 
-MONGO_URI=mongodb://hungzx234:hungzx234@mongodb:27017
+MONGO_URI=YOUR_MONGO_ATLAS_URL
 
 PORT = 5000
 
@@ -20,7 +20,7 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET = 
 ```
 
-You can keep the PORT, NODE_ENV, and MONGO_URI the same, but you need to create the rest on your own. To obtain these three, you need to create your own account on https://cloudinary.com/  and get the required keys from their website. As for JWT_SECRET, you can create any value you like.<br/>
+You can keep the PORT, NODE_ENV the same, but you need to create the rest on your own. To obtain these others, you need to create your own account on https://cloudinary.com/  and get the required keys from their website. As for JWT_SECRET, you can create any value you like.<br/>
 After setting up the ```.env``` file, you can easily run this application by using the following command:
 
 ```js
