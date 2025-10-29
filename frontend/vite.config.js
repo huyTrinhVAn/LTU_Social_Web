@@ -4,10 +4,14 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '0.0.0.0',  // Thêm dòng này
+    host: '0.0.0.0',
     port: 3000,
+    allowedHosts: [
+      'latrobeweb.duckdns.org',
+      '.duckdns.org',  // Cho phép tất cả subdomain duckdns.org
+    ],
     watch: {
-      usePolling: true  // Thêm dòng này - quan trọng cho Docker
+      usePolling: true
     },
     proxy: {
       "/api": {
