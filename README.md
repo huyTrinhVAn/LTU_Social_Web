@@ -27,14 +27,6 @@ After setting up the ```.env``` file, you can easily run this application by usi
 docker-compose up --build.
 
 ```
-This is how the container looks like after running the command above<br/>
-![alt text](./frontend/public/img/img1T1.png)
-You can easily manipulate your database by accessing :
-
-```js 
-http://localhost:8081/
-``` 
-and  basicAuth credentials are "admin:pass" 
 </details> 
 
 <details>
